@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: drishti-library
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn drishti_library.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: drishti-library-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+
+databases:
+  - name: drishti-library-db
+    plan: free
+    databaseName: drishti_library
+    user: drishti_library
