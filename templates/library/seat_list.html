@@ -1,0 +1,29 @@
+{% extends 'library/base.html' %}
+{% block heading %}Seat Management — 40 Seats{% endblock %}
+{% block content %}
+<div class="d-flex gap-3 small mb-4">
+    <span>
+        <i class="legend available"></i>
+         Available
+        </span>
+        <span>
+            <i class="legend occupied"></i> 
+            Not Available / Occupied
+        </span>
+    </div>
+<div class="seat-grid">{% for seat in seats %}{% with active=seat.active_student %}
+    <div class="seat {% if active %}taken{% else %}free{% endif %}">
+        <span class="seat-num">{{ seat.number }}</span>
+        {% if active %}
+        <b>{{ active.name }}</b>
+        <small>{{ active.get_plan_display }}</small>
+        <span class="badge text-bg-light">{{ active.get_payment_status_display }}</span>
+        {% else %}<b>Available</b>
+        <small>{{ seat.location }}</small>
+        <a href="{% url 'student_create' %}">Assign student</a>
+        {% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+</div>
+{% endblock %}

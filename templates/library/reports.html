@@ -1,0 +1,65 @@
+{% extends 'library/base.html' %}
+{% block heading %}Reports{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card blue">
+            <span>This Month Admissions</span>
+            <strong>{{ admissions }}</strong>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card green">
+            <span>This Month Income</span>
+            <strong>₹{{ monthly_income }}</strong>
+        </div>
+    </div>
+    {% for item in by_plan %}
+    <div class="col-md-4">
+        <div class="stat-card orange">
+            <span>{{ item.get_plan_display }}</span>
+            <strong>{{ item.total }}</strong>
+            <small>Active students</small>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Paid Students ({{ paid_students|length }})</h2>
+            </div>
+            {% for s in paid_students %}
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span>
+                    <b>{{ s.name }}</b>
+                     <small class="text-muted">{{ s.student_id }}</small>
+                    </span>
+                    <span>{{ s.seat }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">कोई paid student नहीं है।</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Unpaid Students ({{ unpaid_students|length }})</h2>
+                </div>
+                {% for s in unpaid_students %}
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span>
+                        <b>{{ s.name }}</b> 
+                        <small class="text-muted">{{ s.student_id }}</small>
+                    </span>
+                    <span>{{ s.seat }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">कोई unpaid student नहीं है।</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

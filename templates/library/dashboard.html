@@ -1,0 +1,99 @@
+{% extends 'library/base.html' %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card blue">
+      <span>Total Seats</span>
+      <strong>{{ total_seats }}</strong>
+      <small>Library capacity</small>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="stat-card green">
+      <span>Available Seats</span>
+      <strong>{{ available }}</strong>
+      <small>Ready for admission</small>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="stat-card orange">
+      <span>Occupied Seats</span>
+      <strong>{{ occupied }}</strong>
+      <small>Active students</small>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="stat-card red">
+      <span>Unpaid Students</span>
+      <strong>{{ unpaid }}</strong>
+      <small>{{ paid }} paid students</small>
+    </div>
+  </div>
+</div>
+<div class="row g-4">
+ <div class="col-lg-7">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recent Students</h2>
+      <a href="{% url 'student_list' %}">View all</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Seat</th>
+            <th>Plan</th>
+            <th>Payment</th>
+          </tr>
+        </thead>
+        <tbody>{% for s in recent_students %}
+          <tr>
+            <td>
+              <b>{{ s.name }}</b>
+              <br>
+              <small>{{ s.student_id }}</small>
+            </td>
+            <td>{{ s.seat }}</td>
+            <td>{{ s.get_plan_display }}</td>
+            <td>
+              <span class="badge {% if s.payment_status == 'paid' %}text-bg-success{% else %}text-bg-danger{% endif %}">{{ s.get_payment_status_display }}</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">अभी कोई admission नहीं है।</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+ <div class="col-lg-5">
+  <div class="panel mb-4">
+    <h2>Income</h2>
+    <div class="income">₹{{ income }}</div>
+    <span class="text-muted">Total received payments</span>
+  </div>
+  <div class="panel">
+    <h2>Expiring in 7 days</h2>
+    {% for s in expiring %}
+    <div class="d-flex justify-content-between border-bottom py-2">
+      <span>
+        {{ s.name }}
+         <small class="text-muted">({{ s.seat }})</small>
+        </span>
+        <b>{{ s.expiry_date|date:"d M" }}</b>
+      </div>
+      {% empty %}
+      <p class="text-muted mb-0">कोई membership जल्दी expire नहीं हो रही।</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
