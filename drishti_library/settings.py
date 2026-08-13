@@ -7,7 +7,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "testserver",
-    "drishti-library-1.onrender.com",
+    "drishti-library.onrender.com",
 ]
 
 INSTALLED_APPS = [
