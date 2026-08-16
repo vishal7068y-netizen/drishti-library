@@ -1,8 +1,16 @@
+import os
+import dj_database_url
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = "change-this-secret-key-before-production"
-DEBUG = True
+load_dotenv(BASE_DIR / ".env")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-dev-secret-key-change-in-production"
+)
+
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
@@ -42,12 +50,21 @@ TEMPLATES = [{
     ]},
 }]
 WSGI_APPLICATION = "drishti_library.wsgi.application"
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+
+DATABASES = {
+    "default": dj_database_url.parse(
+        os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True,
+    )
+}
 AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
