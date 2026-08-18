@@ -30,3 +30,11 @@ backup_check.json
 # OS
 .DS_Store
 Thumbs.db
+
+db.sqlite3
+data_backup.json
+data_backup_utf8.json
+.env
+__pycache__/
+*.pyc
+staticfiles/

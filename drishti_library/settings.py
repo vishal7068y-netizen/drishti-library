@@ -1,6 +1,6 @@
+from pathlib import Path
 import os
 import dj_database_url
-from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -52,8 +52,8 @@ TEMPLATES = [{
 WSGI_APPLICATION = "drishti_library.wsgi.application"
 
 DATABASES = {
-    "default": dj_database_url.parse(
-        os.environ.get("DATABASE_URL"),
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
         ssl_require=True,
     )
