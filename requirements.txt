@@ -3,3 +3,4 @@ gunicorn
 dj-database-url
 psycopg[binary]
 python-dotenv
+whitenoise
