@@ -36,7 +36,7 @@ class Student(models.Model):
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
     admission_date = models.DateField(default=timezone.localdate)
-    expiry_date = models.DateField()
+    expiry_date = models.DateField(null=True, blank=True)
     seat = models.ForeignKey(Seat, on_delete=models.PROTECT, related_name="students")
     plan = models.CharField(max_length=12, choices=Plan.choices, default=Plan.FULL_DAY)
     payment_status = models.CharField(max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.UNPAID)
@@ -82,15 +82,40 @@ class Payment(models.Model):
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=8, decimal_places=2)
-    payment_method = models.CharField(max_length=15, choices=Method.choices, default=Method.CASH)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.UNPAID)
+    fee_month = models.DateField(
+    null=True,
+    blank=True,
+    help_text="Fee jis month ke liye hai, us month ki 1st date select karein."
+   )
+    payment_method = models.CharField(
+    max_length=15,
+    choices=Method.choices,
+    default=Method.CASH
+    )
+    status = models.CharField(
+    max_length=10,
+    choices=Status.choices,
+    default=Status.UNPAID
+)
+
     payment_date = models.DateField(null=True, blank=True)
     due_date = models.DateField()
     remarks = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-due_date", "-created_at"]
+      ordering = ["-fee_month", "-due_date", "-created_at"]
+
+    indexes = [
+        models.Index(fields=["student", "fee_month"]),
+    ]
+
+    constraints = [
+        models.UniqueConstraint(
+            fields=["student", "fee_month"],
+            name="unique_student_fee_month",
+        ),
+    ]
 
     def __str__(self):
         return f"{self.student.name} — ₹{self.amount} ({self.status})"

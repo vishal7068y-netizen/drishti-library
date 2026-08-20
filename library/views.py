@@ -1,5 +1,4 @@
-from datetime import timedelta
-
+from datetime import date, timedelta
 from django.contrib import messages
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
@@ -27,6 +26,44 @@ def dashboard(request):
     }
     return render(request, "library/dashboard.html", context)
 
+def get_next_month(month):
+    if month.month == 12:
+     return date(month.year + 1, 1, 1)
+    return date(month.year, month.month + 1, 1)
+
+
+def ensure_monthly_payments():
+    today = timezone.localdate()
+    current_month = today.replace(day=1)
+
+    students = Student.objects.all()
+
+    for student in students:
+        start_month = student.admission_date.replace(day=1)
+
+        # Student ke leave hone ke baad future months create nahi honge
+        if student.expiry_date:
+            end_month = student.expiry_date.replace(day=1)
+            end_month = min(end_month, current_month)
+        else:
+            end_month = current_month
+
+        month = start_month
+
+        while month <= end_month:
+
+            Payment.objects.get_or_create(
+                student=student,
+                fee_month=month,
+                defaults={
+                    "amount": student.monthly_fee,
+                    "status": Payment.Status.UNPAID,
+                    "due_date": month,
+                    "remarks": "Monthly library fee",
+                },
+            )
+
+            month = get_next_month(month)
 
 def student_list(request):
     query = request.GET.get("q", "").strip()
@@ -39,22 +76,45 @@ def student_list(request):
 def student_create(request):
     if request.method == "POST":
         form = StudentForm(request.POST)
+
         if form.is_valid():
             student = form.save()
             Payment.objects.create(
                 student=student,
                 amount=student.monthly_fee,
+                fee_month=student.admission_date.replace(day=1),
                 status=student.payment_status,
-                due_date=student.expiry_date,
-                payment_date=timezone.localdate() if student.payment_status == Student.PaymentStatus.PAID else None,
+                due_date=student.admission_date,
+                payment_date=(
+                    timezone.localdate()
+                    if student.payment_status == Student.PaymentStatus.PAID
+                    else None
+                ),
                 remarks="Admission payment",
             )
-            messages.success(request, f"{student.name} का admission सफलतापूर्वक जोड़ दिया गया।")
-            return redirect("student_list")
-    else:
-        form = StudentForm(initial={"admission_date": timezone.localdate(), "expiry_date": timezone.localdate() + timedelta(days=30)})
-    return render(request, "library/student_form.html", {"form": form, "title": "New Admission"})
 
+            messages.success(
+                request,
+                f"{student.name} का admission सफलतापूर्वक जोड़ दिया गया।"
+            )
+
+            return redirect("student_list")
+
+    else:
+        form = StudentForm(
+            initial={
+                "admission_date": timezone.localdate(),
+            }
+        )
+
+    return render(
+        request,
+        "library/student_form.html",
+        {
+            "form": form,
+            "title": "New Admission",
+        },
+    )
 
 def student_update(request, pk):
     student = get_object_or_404(Student, pk=pk)
@@ -68,13 +128,27 @@ def student_update(request, pk):
         form = StudentForm(instance=student)
     return render(request, "library/student_form.html", {"form": form, "title": f"Edit {student.name}", "student": student})
 
-
 @require_POST
-def student_toggle_active(request, pk):
+def student_leave(request, pk):
     student = get_object_or_404(Student, pk=pk)
-    student.is_active = not student.is_active
-    student.save(update_fields=["is_active"])
-    messages.success(request, f"{student.name} को {'active' if student.is_active else 'inactive'} कर दिया गया।")
+    leaving_date = request.POST.get("leaving_date")
+    if not leaving_date:
+        messages.error(request, "Leaving date select karein.")
+        return redirect("student_list")
+    try:
+        leaving_date = timezone.datetime.strptime(
+            leaving_date, "%Y-%m-%d"
+        ).date()
+    except ValueError:
+        messages.error(request, "Invalid leaving date.")
+        return redirect("student_list")
+    student.expiry_date = leaving_date
+    student.is_active = False
+    student.save(update_fields=["expiry_date", "is_active"])
+    messages.success(
+        request,
+        f"{student.name} ko library se leave kar diya gaya."
+    )
     return redirect("student_list")
 
 
@@ -86,28 +160,84 @@ def seat_list(request):
 
 
 def payment_list(request):
+   
+    ensure_monthly_payments()
+
     status = request.GET.get("status", "")
-    payments = Payment.objects.select_related("student", "student__seat")
+
+    payments = Payment.objects.select_related(
+        "student",
+        "student__seat"
+    )
+
     if status in (Payment.Status.PAID, Payment.Status.UNPAID):
         payments = payments.filter(status=status)
-    return render(request, "library/payment_list.html", {"payments": payments, "selected_status": status})
+
+    return render(
+        request,
+        "library/payment_list.html",
+        {
+            "payments": payments,
+            "selected_status": status,
+        },
+    )
 
 
 def payment_create(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
+
     if request.method == "POST":
         form = PaymentForm(request.POST)
+
         if form.is_valid():
-            payment = form.save(commit=False)
-            payment.student = student
-            payment.save()
-            messages.success(request, "Payment record जोड़ दिया गया।")
+            fee_month = form.cleaned_data["fee_month"]
+
+            payment = Payment.objects.filter(
+                student=student,
+                fee_month=fee_month
+            ).first()
+
+            if payment:
+                form = PaymentForm(request.POST, instance=payment)
+                if form.is_valid():
+                    form.save()
+
+                messages.success(
+                    request,
+                    f"{fee_month.strftime('%B %Y')} ka payment record update ho gaya."
+                )
+
+            else:
+                payment = form.save(commit=False)
+                payment.student = student
+                payment.save()
+
+                messages.success(
+                    request,
+                    f"{fee_month.strftime('%B %Y')} ka payment record add ho gaya."
+                )
+
             return redirect("payment_list")
+
     else:
-        form = PaymentForm(initial={"amount": student.monthly_fee, "due_date": student.expiry_date, "status": Student.PaymentStatus.PAID})
-    return render(request, "library/payment_form.html", {"form": form, "student": student, "title": "Add Payment"})
+        form = PaymentForm(
+            initial={
+                "amount": student.monthly_fee,
+                "due_date": timezone.localdate(),
+                "status": Student.PaymentStatus.PAID,
+                "fee_month": timezone.localdate().replace(day=1),
+            }
+        )
 
-
+    return render(
+        request,
+        "library/payment_form.html",
+        {
+            "form": form,
+            "student": student,
+            "title": "Add Payment",
+        },
+    )
 def payment_update(request, pk):
     payment = get_object_or_404(Payment.objects.select_related("student"), pk=pk)
     if request.method == "POST":

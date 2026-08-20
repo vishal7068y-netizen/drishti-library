@@ -3,46 +3,115 @@
 {% block content %}
 <div class="panel">
     <div class="d-flex gap-2 mb-3">
-        <a class="btn btn-sm {% if not selected_status %}btn-dark{% else %}btn-outline-dark{% endif %}" href="{% url 'payment_list' %}">All</a>
-        <a class="btn btn-sm {% if selected_status == 'paid' %}btn-success{% else %}btn-outline-success{% endif %}" href="?status=paid">Paid</a>
-        <a class="btn btn-sm {% if selected_status == 'unpaid' %}btn-danger{% else %}btn-outline-danger{% endif %}" href="?status=unpaid">Unpaid</a>
+
+        <a class="btn btn-sm {% if not selected_status %}btn-dark{% else %}btn-outline-dark{% endif %}"
+           href="{% url 'payment_list' %}">
+            All
+        </a>
+
+        <a class="btn btn-sm {% if selected_status == 'paid' %}btn-success{% else %}btn-outline-success{% endif %}"
+           href="?status=paid">
+            Paid
+        </a>
+
+        <a class="btn btn-sm {% if selected_status == 'unpaid' %}btn-danger{% else %}btn-outline-danger{% endif %}"
+           href="?status=unpaid">
+            Unpaid
+        </a>
+
     </div>
+
     <div class="table-responsive">
+
         <table class="table table-hover align-middle">
+
             <thead>
                 <tr>
                     <th>Student</th>
                     <th>Seat</th>
+                    <th>Fee Month</th>
                     <th>Amount</th>
                     <th>Method</th>
                     <th>Status</th>
+                    <th>Payment Date</th>
                     <th>Due Date</th>
-                    <th> 
-                 </th>
+                    <th></th>
                 </tr>
             </thead>
+
             <tbody>
+
                 {% for p in payments %}
+
                 <tr>
+
                     <td>
                         <b>{{ p.student.name }}</b>
                         <br>
                         <small>{{ p.student.student_id }}</small>
                     </td>
-                    <td>{{ p.student.seat }}</td>
-                    <td>₹{{ p.amount }}</td>
-                    <td>{{ p.get_payment_method_display }}</td>
                     <td>
-                        <span class="badge {% if p.status == 'paid' %}text-bg-success{% else %}text-bg-danger{% endif %}">{{ p.get_status_display }}</span>
+                        {{ p.student.seat }}
                     </td>
-                    <td>{{ p.due_date|date:"d M Y" }}</td>
+
                     <td>
-                        <a class="btn btn-sm btn-outline-primary" href="{% url 'payment_update' p.pk %}">Edit</a>
+                        {% if p.fee_month %}
+                            <b>{{ p.fee_month|date:"F Y" }}</b>
+                        {% else %}
+                            <span class="text-muted">Not set</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        ₹{{ p.amount }}
+                    </td>
+
+                    <td>
+                        {{ p.get_payment_method_display }}
+                    </td>
+
+                    <td>
+
+                        {% if p.status == 'paid' %}
+
+                            <span class="badge text-bg-success">
+                                Paid
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge text-bg-danger">
+                                Unpaid
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+                    <td>
+                        {% if p.payment_date %}
+                            {{ p.payment_date|date:"d M Y" }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ p.due_date|date:"d M Y" }}
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="{% url 'payment_update' p.pk %}">
+                            Edit
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-5">कोई payment record नहीं है।</td>
+                    <td colspan="9"
+                        class="text-center text-muted py-5">
+
+                        कोई payment record नहीं है।
+
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

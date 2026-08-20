@@ -198,3 +198,27 @@ body {
         padding: 1.5rem !important;
     }
 }
+
+body {
+    position: relative;
+    min-height: 100vh;
+    background-color: #f4f7fb;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("/static/css/library/images/drishti-logo.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 600px;
+    opacity: 0.10;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
+}

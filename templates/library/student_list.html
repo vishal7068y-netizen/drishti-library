@@ -19,7 +19,7 @@
                     <th>Seat</th>
                     <th>Plan</th>
                     <th>Status</th>
-                    <th>Expiry</th>
+                    <th>Leaving Date</th>
                     <th>      </th>
                 </tr>
             </thead>
@@ -37,20 +37,33 @@
                     <td>{% if s.is_active %}
                         <span class="badge text-bg-primary">Active</span>
                         {% else %}
-                        <span class="badge text-bg-secondary">Inactive</span>
+                        <span class="badge text-bg-secondary">Left</span>
                         {% endif %}
                          <span class="badge {% if s.payment_status == 'paid' %}text-bg-success{% else %}text-bg-danger{% endif %}">{{ s.get_payment_status_display }}</span>
                         </td>
-                        <td>{{ s.expiry_date|date:"d M Y" }}</td>
+                        <td> {% if s.expiry_date %}
+                            {{ s.expiry_date|date:"d M Y" }}
+                          {% else %}
+                            <span class="text-muted">Not left</span>
+                        {% endif %}</td>
                         <td class="text-nowrap">
                             <a class="btn btn-sm btn-outline-primary" href="{% url 'student_update' s.pk %}">Edit</a>
                              <a class="btn btn-sm btn-outline-success" href="{% url 'payment_create' s.pk %}">₹</a>
-                             <form class="d-inline" method="post" action="{% url 'student_toggle_active' s.pk %}">
+                              {% if s.is_active %}
+                             <form class="d-inline" method="post" action="{% url 'student_leave' s.pk %}">
                                 {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    {% if s.is_active %}End{% else %}Start{% endif %}
-                                </button>
+                                 <input type="date"
+                                   name="leaving_date"
+                                   class="form-control form-control-sm d-inline-block"
+                                   style="width: 145px;"
+                                   required>
+                                <button class="btn btn-sm btn-outline-danger"
+                                    type="submit"
+                                    onclick="return confirm('Kya ye student library chhod raha hai?');">
+                                Student Left
+                            </button>
                             </form>
+                             {% endif %}
                         </td>
                         </tr>{% empty %}<tr>
                             <td colspan="7" class="text-center py-5 text-muted">कोई student नहीं मिला।
