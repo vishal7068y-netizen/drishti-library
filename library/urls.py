@@ -13,5 +13,4 @@ urlpatterns = [
     path("payments/add/<int:student_id>/", views.payment_create, name="payment_create"),
     path("payments/<int:pk>/edit/", views.payment_update, name="payment_update"),
     path("reports/", views.reports, name="reports"),
-    path("reset-admin/", views.reset_admin, name="reset_admin"),
 ]
