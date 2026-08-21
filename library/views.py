@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from .forms import PaymentForm, StudentForm
 from .models import Payment, Seat, Student
+from django.http import HttpResponse
 
 
 def dashboard(request):
@@ -262,3 +263,13 @@ def reports(request):
         "admissions": Student.objects.filter(admission_date__month=today.month, admission_date__year=today.year).count(),
     })
     
+    
+    
+def clear_library_data(request):
+    if request.GET.get("key") != "clear-drishti-2026":
+        return HttpResponse("Invalid key", status=403)
+
+    Payment.objects.all().delete()
+    Student.objects.all().delete()
+
+    return HttpResponse("LIBRARY DATA CLEARED SUCCESSFULLY")
