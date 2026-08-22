@@ -52,16 +52,26 @@ def ensure_monthly_payments():
 
         while month <= end_month:
 
-            Payment.objects.get_or_create(
-                student=student,
-                fee_month=month,
-                defaults={
-                    "amount": student.monthly_fee,
-                    "status": Payment.Status.UNPAID,
-                    "due_date": month,
-                    "remarks": "Monthly library fee",
-                },
+            payment = (
+                Payment.objects
+                .filter(
+                    student=student,
+                    fee_month=month
+                )
+                .order_by("id")
+                .first()
             )
+
+            # Agar is month ka record nahi hai tabhi naya banao
+            if not payment:
+                Payment.objects.create(
+                    student=student,
+                    amount=student.monthly_fee,
+                    fee_month=month,
+                    status=Payment.Status.UNPAID,
+                    due_date=month,
+                    remarks="Monthly library fee",
+                )
 
             month = get_next_month(month)
 
